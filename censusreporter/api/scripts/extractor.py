@@ -11,8 +11,8 @@ engine = create_engine('postgresql://census:census@localhost:5432/census_2011')
 df.to_sql("tbl_ward", engine)
 
 
+print('test')
 
-print('sths')
 
 
 
