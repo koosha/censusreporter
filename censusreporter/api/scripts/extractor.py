@@ -12,7 +12,7 @@ df.to_sql("tbl_ward", engine)
 
 
 
-print('sth')
+print('sths')
 
 
 
