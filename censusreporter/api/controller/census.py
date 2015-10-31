@@ -10,15 +10,14 @@ from .utils import (collapse_categories, calculate_median, calculate_median_stat
                     merge_dicts, group_remainder, add_metadata, get_stat_data, get_objects_by_geo, percent,
                     create_debug_dump)
 
-
 PROFILE_SECTIONS = (
     'demographics',  # population group, age group in 5 years, age in completed years
-    'economics',  # individual monthly income, type of sector, official employment status
-    'service_delivery',  # source of water, refuse disposal
-    'education',  # highest educational level
-    'households',  # household heads, etc.
-    'children',  # child-related stats
-    'child_households',  # households headed by children
+    # 'economics',  # individual monthly income, type of sector, official employment status
+    # 'service_delivery',  # source of water, refuse disposal
+    # 'education',  # highest educational level
+    # 'households',  # household heads, etc.
+    # 'children',  # child-related stats
+    # 'child_households',  # households headed by children
 )
 
 # Education categories
@@ -262,7 +261,6 @@ TYPE_OF_DWELLING_RECODE = {
     'Not applicable': 'N/A',
 }
 
-
 COLLAPSED_EMPLOYMENT_CATEGORIES = {
     'Employed': 'In labour force',
     'Unemployed': 'In labour force',
@@ -274,6 +272,7 @@ COLLAPSED_EMPLOYMENT_CATEGORIES = {
 
 
 def get_census_profile(geo_code, geo_level):
+    geo_code, geo_level = 'EC', 'province'
     session = get_session()
 
     try:
@@ -297,15 +296,203 @@ def get_census_profile(geo_code, geo_level):
 
         # tweaks to make the data nicer
         # show 3 largest groups on their own and group the rest as 'Other'
-        group_remainder(data['service_delivery']['water_source_distribution'], 5)
-        group_remainder(data['service_delivery']['refuse_disposal_distribution'], 5)
-        group_remainder(data['service_delivery']['toilet_facilities_distribution'], 5)
+        # group_remainder(data['service_delivery']['water_source_distribution'], 5)
+        # group_remainder(data['service_delivery']['refuse_disposal_distribution'], 5)
+        # group_remainder(data['service_delivery']['toilet_facilities_distribution'], 5)
         group_remainder(data['demographics']['language_distribution'], 7)
         group_remainder(data['demographics']['province_of_birth_distribution'], 7)
         group_remainder(data['demographics']['region_of_birth_distribution'], 5)
-        group_remainder(data['households']['type_of_dwelling_distribution'], 5)
-        group_remainder(data['child_households']['type_of_dwelling_distribution'], 5)
-        
+        # group_remainder(data['households']['type_of_dwelling_distribution'], 5)
+        # group_remainder(data['child_households']['type_of_dwelling_distribution'], 5)
+
+        data = {'demographics': {
+            'age_group_distribution': OrderedDict
+                (
+                [('0-9', OrderedDict([('name', '0-9'), ('numerators', {'this': 1001000.0, 'country': 2000.0}),
+                                      ('values', {'this': 16.46, 'country': 20.29})])), ('10-19', OrderedDict(
+                    [('name', '10-19'), ('numerators', {'this': 1424796.0, 'country': 9598363.0}),
+                     ('values', {'this': 23.43, 'country': 18.54})])), ('20-29', OrderedDict(
+                    [('name', '20-29'), ('numerators', {'this': 1098678.0, 'country': 10433859.0}),
+                     ('values', {'this': 18.07, 'country': 20.15})])), ('30-39', OrderedDict(
+                    [('name', '30-39'), ('numerators', {'this': 747991.0, 'country': 7496777.0}),
+                     ('values', {'this': 12.3, 'country': 14.48})])), ('40-49', OrderedDict(
+                    [('name', '40-49'), ('numerators', {'this': 635944.0, 'country': 5568901.0}),
+                     ('values', {'this': 10.46, 'country': 10.76})])), ('50-59', OrderedDict(
+                    [('name', '50-59'), ('numerators', {'this': 533210.0, 'country': 4015697.0}),
+                     ('values', {'this': 8.77, 'country': 7.76})])), ('60-69', OrderedDict(
+                    [('name', '60-69'), ('numerators', {'this': 337100.0, 'country': 2343573.0}),
+                     ('values', {'this': 5.54, 'country': 4.53})])), ('70-79', OrderedDict(
+                    [('name', '70-79'), ('numerators', {'this': 207186.0, 'country': 1229598.0}),
+                     ('values', {'this': 3.41, 'country': 2.38})])), ('80+', OrderedDict(
+                    [('name', '80+'), ('numerators', {'this': 93938.0, 'country': 578589.0}),
+                     ('values', {'this': 1.55, 'country': 1.12})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'AGEGROUPSIN5YEARS'})]
+            ),
+            'sex_ratio': OrderedDict
+                (
+                [('Female', {'values': {'this': 52.92, 'country': 51.35}, 'name': 'Female',
+                             'numerators': {'this': 3472353.0, 'country': 2000.0}}), ('Male', {
+                    'values': {'this': 47.08, 'country': 48.65}, 'name': 'Male',
+                    'numerators': {'this': 3089701L, 'country': 25188791L}}),
+                 ('metadata', {'universe': 'Population', 'table_id': 'GENDER'})]
+            ),
+            'province_of_birth_distribution': OrderedDict
+                (
+                [(u'taghtagh', OrderedDict([('name', u'taghtagh'), ('numerators', {'this': 5982758.0, 'country': 2000}),
+                                            ('values', {'this': 91.17, 'country': 15.38})])), (u'Western Cape',
+                                                                                               OrderedDict([('name',
+                                                                                                             u'Western Cape'),
+                                                                                                            (
+                                                                                                            'numerators',
+                                                                                                            {
+                                                                                                                'this': 105214.0,
+                                                                                                                'country': 4456413.0}),
+                                                                                                            ('values', {
+                                                                                                                'this': 1.6,
+                                                                                                                'country': 8.61})])),
+                 (u'Not applicable', OrderedDict(
+                     [('name', u'Not applicable'), ('numerators', {'this': 97849.0, 'country': 755340.0}),
+                      ('values', {'this': 1.49, 'country': 1.46})])), (u'Unspecified', OrderedDict(
+                    [('name', u'Unspecified'), ('numerators', {'this': 96459.0, 'country': 731621.0}),
+                     ('values', {'this': 1.47, 'country': 1.41})])), (u'Gauteng', OrderedDict(
+                    [('name', u'Gauteng'), ('numerators', {'this': 83097.0, 'country': 7617141.0}),
+                     ('values', {'this': 1.27, 'country': 14.71})])), (u'Outside South Africa', OrderedDict(
+                    [('name', u'Outside South Africa'), ('numerators', {'this': 75319.0, 'country': 2199871.0}),
+                     ('values', {'this': 1.15, 'country': 4.25})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'PROVINCEOFBIRTH'}), ('Other', {
+                    'values': {'this': 1.85, 'country': 54.18}, 'numerator_errors': {'this': 0.0}, 'name': 'Other',
+                    'numerators': {'this': 121357.0, 'country': 28048930.0}, 'error': {'this': 0.0}})]
+            ),
+            'citizenship_south_african': {
+                'values': {
+                    'this': 96.92,
+                    'country': 94.55
+                },
+                'name': 'South African citizens',
+                'numerators': {
+                    'this': 6359891.0,
+                    'country': 48949338.0
+                }
+            },
+            'language_most_spoken': OrderedDict
+                (
+                [('name', u'IsiXhosa'), ('numerators', {'this': 5092152.0, 'country': 8154258.0}),
+                 ('values', {'this': 77.6, 'country': 15.75})]
+            ),
+            'region_of_birth_distribution': OrderedDict
+                (
+                [('South Africa', OrderedDict(
+                    [('name', 'South Africa'), ('numerators', {'this': 6292426.0, 'country': 48083729.0}),
+                     ('values', {'this': 95.89, 'country': 92.88})])), (u'Unspecified', OrderedDict(
+                    [('name', u'Unspecified'), ('numerators', {'this': 219923.0, 'country': 2165991.0}),
+                     ('values', {'this': 3.35, 'country': 4.18})])), (u'SADC', OrderedDict(
+                    [('name', u'SADC'), ('numerators', {'this': 29273.0, 'country': 1219891.0}),
+                     ('values', {'this': 0.45, 'country': 2.36})])), (u'Rest of Africa', OrderedDict(
+                    [('name', u'Rest of Africa'), ('numerators', {'this': 11517.0, 'country': 132753.0}),
+                     ('values', {'this': 0.18, 'country': 0.26})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'REGIONOFBIRTH'}), ('Other', {
+                    'values': {'this': 0.14, 'country': 0.32}, 'numerator_errors': {'this': 0.0}, 'name': 'Other',
+                    'numerators': {'this': 8914.0, 'country': 168196.0}, 'error': {'this': 0.0}})]
+            ),
+            'median_age': {
+                'values': {
+                    'this': 22.0,
+                    'country': 25.0
+                },
+                'name': 'Median age'
+            },
+            'born_in_south_africa': {
+                'values': {
+                    'this': 95.89,
+                    'country': 92.88
+                },
+                'name': 'Born in South Africa',
+                'numerators': {
+                    'this': 6292426.0,
+                    'country': 48083729.0
+                }
+            },
+            'age_category_distribution': OrderedDict
+                (
+                [('under_18', {'values': {'this': 39.98, 'country': 34.9}, 'name': 'Under 18'}),
+                 ('18_to_64', {'values': {'this': 53.29, 'country': 59.76}, 'name': '18 to 64'}),
+                 ('65_and_over', {'values': {'this': 6.73, 'country': 5.34}, 'name': '65 and over'}),
+                 ('metadata', {'universe': 'Population', 'table_id': 'AGEINCOMPLETEDYEARS'})]
+            ),
+            'language_distribution': OrderedDict
+                (
+                [(u'IsiXhosa', OrderedDict(
+                    [('name', u'IsiXhosa'), ('numerators', {'this': 5092152.0, 'country': 8154258.0}),
+                     ('values', {'this': 77.6, 'country': 15.75})])), (u'Afrikaans', OrderedDict(
+                    [('name', u'Afrikaans'), ('numerators', {'this': 683409.0, 'country': 6855081.0}),
+                     ('values', {'this': 10.41, 'country': 13.24})])), (u'English', OrderedDict(
+                    [('name', u'English'), ('numerators', {'this': 362502.0, 'country': 4892622.0}),
+                     ('values', {'this': 5.52, 'country': 9.45})])), (u'Sesotho', OrderedDict(
+                    [('name', u'Sesotho'), ('numerators', {'this': 158964.0, 'country': 3849561.0}),
+                     ('values', {'this': 2.42, 'country': 7.44})])), (u'Not applicable', OrderedDict(
+                    [('name', u'Not applicable'), ('numerators', {'this': 103728.0, 'country': 809118.0}),
+                     ('values', {'this': 1.58, 'country': 1.56})])), (u'Sign language', OrderedDict(
+                    [('name', u'Sign language'), ('numerators', {'this': 42237.0, 'country': 234654.0}),
+                     ('values', {'this': 0.64, 'country': 0.45})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'LANGUAGE'}), ('Other', {
+                    'values': {'this': 1.81, 'country': 52.11}, 'numerator_errors': {'this': 0.0}, 'name': 'Other',
+                    'numerators': {'this': 119064.0, 'country': 26975262.0}, 'error': {'this': 0.0}})]
+            ),
+            'total_population': {
+                'values': {
+                    'this': 6562054.0,
+                    'country': 51770561.0
+                },
+                'name': 'People'
+            },
+            'citizenship_distribution': OrderedDict
+                (
+                [(u'Yes', OrderedDict([('name', u'Yes'), ('numerators', {'this': 6359891.0, 'country': 48949338.0}),
+                                       ('values', {'this': 96.92, 'country': 94.55})])), (u'Not applicable',
+                                                                                          OrderedDict([('name',
+                                                                                                        u'Not applicable'),
+                                                                                                       ('numerators', {
+                                                                                                           'this': 97658.0,
+                                                                                                           'country': 750060.0}),
+                                                                                                       ('values',
+                                                                                                        {'this': 1.49,
+                                                                                                         'country': 1.45})])),
+                 (u'No', OrderedDict([('name', u'No'), ('numerators', {'this': 58486.0, 'country': 1692242.0}),
+                                      ('values', {'this': 0.89, 'country': 3.27})])), (u'Unspecified', OrderedDict(
+                    [('name', u'Unspecified'), ('numerators', {'this': 46017.0, 'country': 378920.0}),
+                     ('values', {'this': 0.7, 'country': 0.73})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'CITIZENSHIP'})]
+            ),
+            'population_group_distribution': OrderedDict
+                (
+                [(u'Black African', OrderedDict(
+                    [('name', u'Black African'), ('numerators', {'this': 5660230.0, 'country': 41000938.0}),
+                     ('values', {'this': 86.26, 'country': 79.2})])), (u'Coloured', OrderedDict(
+                    [('name', u'Coloured'), ('numerators', {'this': 541850.0, 'country': 4615401.0}),
+                     ('values', {'this': 8.26, 'country': 8.92})])), (u'Indian or Asian', OrderedDict(
+                    [('name', u'Indian or Asian'), ('numerators', {'this': 27929.0, 'country': 1286930.0}),
+                     ('values', {'this': 0.43, 'country': 2.49})])), (u'Other', OrderedDict(
+                    [('name', u'Other'), ('numerators', {'this': 21595.0, 'country': 280454.0}),
+                     ('values', {'this': 0.33, 'country': 0.54})])), (u'White', OrderedDict(
+                    [('name', u'White'), ('numerators', {'this': 310450.0, 'country': 4586838.0}),
+                     ('values', {'this': 4.73, 'country': 8.86})])),
+                 ('metadata', {'universe': 'Population', 'table_id': 'POPULATIONGROUP'})]
+            )
+        },
+            'crime': {
+                'crime_against_children': {
+                    'values': {
+                        'this': 279.0,
+                        'country': 2623.0
+                    },
+                    'name': 'Crimes of neglect and ill-treatment of children in 2014',
+                    'metadata': {
+                        'universe': 'Crimes in 2014'
+                    }
+                },
+                'dataset': 'Police Crime Statistics 2014'
+            }
+        }
         return data
 
     finally:
@@ -315,43 +502,43 @@ def get_census_profile(geo_code, geo_level):
 def get_demographics_profile(geo_code, geo_level, session):
     # population group
     pop_dist_data, total_pop = get_stat_data(
-            ['population group'], geo_level, geo_code, session)
+        ['population group'], geo_level, geo_code, session)
 
     # language
     language_data, _ = get_stat_data(
-            ['language'], geo_level, geo_code, session, order_by='-total')
+        ['language'], geo_level, geo_code, session, order_by='-total')
     language_most_spoken = language_data[language_data.keys()[0]]
 
     # age groups
     age_dist_data, total_age = get_stat_data(
-            ['age groups in 5 years'], geo_level, geo_code, session,
-            recode=COLLAPSED_AGE_CATEGORIES,
-            key_order=('0-9', '10-19',
-                       '20-29', '30-39',
-                       '40-49', '50-59',
-                       '60-69', '70-79',
-                       '80+'))
+        ['age groups in 5 years'], geo_level, geo_code, session,
+        recode=COLLAPSED_AGE_CATEGORIES,
+        key_order=('0-9', '10-19',
+                   '20-29', '30-39',
+                   '40-49', '50-59',
+                   '60-69', '70-79',
+                   '80+'))
 
     # sex
     db_model_sex = get_model_from_fields(['gender'], geo_level, table_name='gender_%s' % geo_level)
     query = session.query(func.sum(db_model_sex.total)) \
-                   .filter(db_model_sex.gender == 'Male')
+        .filter(db_model_sex.gender == 'Male')
     geo_attr = '%s_code' % geo_level
     query = query.filter(getattr(db_model_sex, geo_attr) == geo_code)
     total_male = query.one()[0]
 
     sex_data = OrderedDict((  # census data refers to sex as gender
-            ('Female', {
-                "name": "Female",
-                "values": {"this": round((total_pop - total_male) / total_pop * 100, 2)},
-                "numerators": {"this": total_pop - total_male},
-            }),
-            ('Male', {
-                "name": "Male",
-                "values": {"this": round(total_male / total_pop * 100, 2)},
-                "numerators": {"this": total_male},
-            }),
-        ))
+                              ('Female', {
+                                  "name": "Female",
+                                  "values": {"this": round((total_pop - total_male) / total_pop * 100, 2)},
+                                  "numerators": {"this": total_pop - total_male},
+                              }),
+                              ('Male', {
+                                  "name": "Male",
+                                  "values": {"this": round(total_male / total_pop * 100, 2)},
+                                  "numerators": {"this": total_male},
+                              }),
+                              ))
 
     add_metadata(sex_data, db_model_sex)
 
@@ -416,22 +603,22 @@ def get_demographics_profile(geo_code, geo_level, session):
 
     # citizenship
     citizenship_dist, _ = get_stat_data(
-            ['citizenship'], geo_level, geo_code, session,
-            order_by='-total')
+        ['citizenship'], geo_level, geo_code, session,
+        order_by='-total')
 
     sa_citizen = citizenship_dist['Yes']['numerators']['this']
 
     final_data['citizenship_distribution'] = citizenship_dist
     final_data['citizenship_south_african'] = {
-            'name': 'South African citizens',
-            'values': {'this': percent(sa_citizen, total_pop)},
-            'numerators': {'this': sa_citizen},
-            }
+        'name': 'South African citizens',
+        'values': {'this': percent(sa_citizen, total_pop)},
+        'numerators': {'this': sa_citizen},
+    }
 
     # migration
     province_of_birth_dist, _ = get_stat_data(
-            ['province of birth'], geo_level, geo_code, session,
-            exclude_zero=True, order_by='-total')
+        ['province of birth'], geo_level, geo_code, session,
+        exclude_zero=True, order_by='-total')
 
     final_data['province_of_birth_distribution'] = province_of_birth_dist
 
@@ -442,9 +629,9 @@ def get_demographics_profile(geo_code, geo_level, session):
             return key
 
     region_of_birth_dist, _ = get_stat_data(
-            ['region of birth'], geo_level, geo_code, session,
-            exclude_zero=True, order_by='-total',
-            recode=region_recode)
+        ['region of birth'], geo_level, geo_code, session,
+        exclude_zero=True, order_by='-total',
+        recode=region_recode)
 
     if 'South Africa' in region_of_birth_dist:
         born_in_sa = region_of_birth_dist['South Africa']['numerators']['this']
@@ -453,10 +640,10 @@ def get_demographics_profile(geo_code, geo_level, session):
 
     final_data['region_of_birth_distribution'] = region_of_birth_dist
     final_data['born_in_south_africa'] = {
-            'name': 'Born in South Africa',
-            'values': {'this': percent(born_in_sa, total_pop)},
-            'numerators': {'this': born_in_sa},
-            }
+        'name': 'Born in South Africa',
+        'values': {'this': percent(born_in_sa, total_pop)},
+        'numerators': {'this': born_in_sa},
+    }
 
     return final_data
 
@@ -465,8 +652,8 @@ def get_households_profile(geo_code, geo_level, session):
     # head of household
     # gender
     head_gender_dist, total_households = get_stat_data(
-            ['gender of household head'], geo_level, geo_code, session,
-            order_by='gender of household head')
+        ['gender of household head'], geo_level, geo_code, session,
+        order_by='gender of household head')
     female_heads = head_gender_dist['Female']['numerators']['this']
 
     # age
@@ -479,8 +666,8 @@ def get_households_profile(geo_code, geo_level, session):
 
     # tenure
     tenure_data, _ = get_stat_data(
-            ['tenure status'], geo_level, geo_code, session,
-            order_by='tenure status')
+        ['tenure status'], geo_level, geo_code, session,
+        order_by='tenure status')
     owned = 0
     for key, data in tenure_data.iteritems():
         if key.startswith('Owned'):
@@ -488,11 +675,11 @@ def get_households_profile(geo_code, geo_level, session):
 
     # annual household income
     income_dist_data, _ = get_stat_data(
-            ['annual household income'], geo_level, geo_code, session,
-            exclude=['Unspecified'],
-            recode=HOUSEHOLD_INCOME_RECODE,
-            key_order=HOUSEHOLD_INCOME_RECODE.values(),
-            table_name='annualhouseholdincome_genderofhouseholdhead_%s' % geo_level)
+        ['annual household income'], geo_level, geo_code, session,
+        exclude=['Unspecified'],
+        recode=HOUSEHOLD_INCOME_RECODE,
+        key_order=HOUSEHOLD_INCOME_RECODE.values(),
+        table_name='annualhouseholdincome_genderofhouseholdhead_%s' % geo_level)
 
     # median income
     median = calculate_median_stat(income_dist_data)
@@ -500,63 +687,63 @@ def get_households_profile(geo_code, geo_level, session):
 
     # type of dwelling
     type_of_dwelling_dist, _ = get_stat_data(
-            ['type of dwelling'], geo_level, geo_code, session,
-            recode=TYPE_OF_DWELLING_RECODE,
-            order_by='-total')
+        ['type of dwelling'], geo_level, geo_code, session,
+        recode=TYPE_OF_DWELLING_RECODE,
+        order_by='-total')
     informal = type_of_dwelling_dist['Shack']['numerators']['this']
 
     # household goods
     household_goods, _ = get_stat_data(
-            ['household goods'], geo_level, geo_code, session,
-            total=total_households,
-            recode=HOUSEHOLD_GOODS_RECODE,
-            exclude=['total households'],
-            key_order=sorted(HOUSEHOLD_GOODS_RECODE.values()))
+        ['household goods'], geo_level, geo_code, session,
+        total=total_households,
+        recode=HOUSEHOLD_GOODS_RECODE,
+        exclude=['total households'],
+        key_order=sorted(HOUSEHOLD_GOODS_RECODE.values()))
 
     return {'total_households': {
-                'name': 'Households',
-                'values': {'this': total_households},
-                },
-            'owned': {
-                'name': 'Households fully owned or being paid off',
-                'values': {'this': percent(owned, total_households)},
-                'numerators': {'this': owned},
-                },
-            'type_of_dwelling_distribution': type_of_dwelling_dist,
-            'informal': {
-                'name': 'Households that are informal dwellings (shacks)',
-                'values': {'this': percent(informal, total_households)},
-                'numerators': {'this': informal},
-                },
-            'tenure_distribution': tenure_data,
-            'household_goods': household_goods,
-            'annual_income_distribution': income_dist_data,
-            'median_annual_income': {
-                'name': 'Average annual household income',
-                'values': {'this': median_income},
-                },
-            'head_of_household': {
-                'gender_distribution': head_gender_dist,
-                'female': {
-                    'name': 'Households with women as their head',
-                    'values': {'this': percent(female_heads, total_households)},
-                    'numerators': {'this': female_heads},
-                    },
-                'under_18': {
-                    'name': 'Households with heads under 18 years old',
-                    'values': {'this': total_under_18},
-                    }
-                },
-           }
+        'name': 'Households',
+        'values': {'this': total_households},
+    },
+        'owned': {
+            'name': 'Households fully owned or being paid off',
+            'values': {'this': percent(owned, total_households)},
+            'numerators': {'this': owned},
+        },
+        'type_of_dwelling_distribution': type_of_dwelling_dist,
+        'informal': {
+            'name': 'Households that are informal dwellings (shacks)',
+            'values': {'this': percent(informal, total_households)},
+            'numerators': {'this': informal},
+        },
+        'tenure_distribution': tenure_data,
+        'household_goods': household_goods,
+        'annual_income_distribution': income_dist_data,
+        'median_annual_income': {
+            'name': 'Average annual household income',
+            'values': {'this': median_income},
+        },
+        'head_of_household': {
+            'gender_distribution': head_gender_dist,
+            'female': {
+                'name': 'Households with women as their head',
+                'values': {'this': percent(female_heads, total_households)},
+                'numerators': {'this': female_heads},
+            },
+            'under_18': {
+                'name': 'Households with heads under 18 years old',
+                'values': {'this': total_under_18},
+            }
+        },
+    }
 
 
 def get_economics_profile(geo_code, geo_level, session):
     # income
     income_dist_data, total_workers = get_stat_data(
-            ['employed individual monthly income'], geo_level, geo_code, session,
-            exclude=['Not applicable'],
-            recode=COLLAPSED_INCOME_CATEGORIES,
-            key_order=COLLAPSED_INCOME_CATEGORIES.values())
+        ['employed individual monthly income'], geo_level, geo_code, session,
+        exclude=['Not applicable'],
+        recode=COLLAPSED_INCOME_CATEGORIES,
+        key_order=COLLAPSED_INCOME_CATEGORIES.values())
 
     # median income
     median = calculate_median_stat(income_dist_data)
@@ -564,30 +751,30 @@ def get_economics_profile(geo_code, geo_level, session):
 
     # employment status
     employ_status, total_workers = get_stat_data(
-            ['official employment status'], geo_level, geo_code, session,
-            exclude=['Age less than 15 years', 'Not applicable'],
-            order_by='official employment status',
-            table_name='officialemploymentstatus_%s' % geo_level)
+        ['official employment status'], geo_level, geo_code, session,
+        exclude=['Age less than 15 years', 'Not applicable'],
+        order_by='official employment status',
+        table_name='officialemploymentstatus_%s' % geo_level)
 
     # sector
     sector_dist_data, _ = get_stat_data(
-            ['type of sector'], geo_level, geo_code, session,
-            exclude=['Not applicable'],
-            order_by='type of sector')
+        ['type of sector'], geo_level, geo_code, session,
+        exclude=['Not applicable'],
+        order_by='type of sector')
 
     # access to internet
     internet_access_dist, total_with_access = get_stat_data(
-            ['access to internet'], geo_level, geo_code, session, exclude=['No access to internet'],
-            order_by='access to internet')
+        ['access to internet'], geo_level, geo_code, session, exclude=['No access to internet'],
+        order_by='access to internet')
     _, total_without_access = get_stat_data(
-            ['access to internet'], geo_level, geo_code, session, only=['No access to internet'])
+        ['access to internet'], geo_level, geo_code, session, only=['No access to internet'])
     total_households = total_with_access + total_without_access
 
     return {'individual_income_distribution': income_dist_data,
             'median_individual_income': {
                 'name': 'Average monthly income',
                 'values': {'this': median_income},
-                },
+            },
             'employment_status': employ_status,
             'sector_type_distribution': sector_dist_data,
             'internet_access_distribution': internet_access_dist,
@@ -595,16 +782,16 @@ def get_economics_profile(geo_code, geo_level, session):
                 'name': 'Households with internet access',
                 'values': {'this': percent(total_with_access, total_households)},
                 'numerators': {'this': total_with_access},
-                }
+            }
             }
 
 
 def get_service_delivery_profile(geo_code, geo_level, session):
     # water source
     water_src_data, total_wsrc = get_stat_data(
-            ['source of water'], geo_level, geo_code, session,
-            recode=SHORT_WATER_SOURCE_CATEGORIES,
-            order_by='-total')
+        ['source of water'], geo_level, geo_code, session,
+        recode=SHORT_WATER_SOURCE_CATEGORIES,
+        order_by='-total')
     if 'Service provider' in water_src_data:
         total_water_sp = water_src_data['Service provider']['numerators']['this']
     else:
@@ -677,10 +864,10 @@ def get_service_delivery_profile(geo_code, geo_level, session):
 
     # toilets
     toilet_data, total_toilet = get_stat_data(
-            ['toilet facilities'], geo_level, geo_code, session,
-            exclude_zero=True,
-            recode=COLLAPSED_TOILET_CATEGORIES,
-            order_by='-total')
+        ['toilet facilities'], geo_level, geo_code, session,
+        exclude_zero=True,
+        recode=COLLAPSED_TOILET_CATEGORIES,
+        order_by='-total')
 
     total_flush_toilet = 0.0
     total_no_toilet = 0.0
@@ -719,7 +906,7 @@ def get_service_delivery_profile(geo_code, geo_level, session):
                 "values": {"this": percent(total_no_toilet, total_toilet)},
             },
             'toilet_facilities_distribution': toilet_data,
-    }
+            }
 
 
 def get_education_profile(geo_code, geo_level, session):
@@ -774,11 +961,11 @@ def get_education_profile(geo_code, geo_level, session):
 def get_children_profile(geo_code, geo_level, session):
     # age
     child_adult_dist, _ = get_stat_data(
-            ['age in completed years'], geo_level, geo_code, session,
-            table_name='ageincompletedyearssimplified_%s' % geo_level,
-            recode={'< 18': 'Children (< 18)',
-                    '18 to 64': 'Adults (>= 18)',
-                    '>= 65': 'Adults (>= 18)'})
+        ['age in completed years'], geo_level, geo_code, session,
+        table_name='ageincompletedyearssimplified_%s' % geo_level,
+        recode={'< 18': 'Children (< 18)',
+                '18 to 64': 'Adults (>= 18)',
+                '>= 65': 'Adults (>= 18)'})
 
     # parental survival
     parental_survival_dist, _ = get_stat_data(['parents alive'],
@@ -786,8 +973,8 @@ def get_children_profile(geo_code, geo_level, session):
 
     # gender
     gender_dist, _ = get_stat_data(
-            ['gender'], geo_level, geo_code, session,
-            table_name='genderunder18_%s' % geo_level)
+        ['gender'], geo_level, geo_code, session,
+        table_name='genderunder18_%s' % geo_level)
 
     # school
 
@@ -888,18 +1075,18 @@ def get_child_households_profile(geo_code, geo_level, session):
     # head of household
     # gender
     head_gender_dist, total_households = get_stat_data(
-            ['gender of head of household'], geo_level, geo_code, session,
-            order_by='gender of head of household',
-            table_name='genderofheadofhouseholdunder18_%s' % geo_level)
+        ['gender of head of household'], geo_level, geo_code, session,
+        order_by='gender of head of household',
+        table_name='genderofheadofhouseholdunder18_%s' % geo_level)
     female_heads = head_gender_dist['Female']['numerators']['this']
 
     # annual household income
     income_dist_data, _ = get_stat_data(
-            ['annual household income'], geo_level, geo_code, session,
-            exclude=['Unspecified'],
-            recode=HOUSEHOLD_INCOME_RECODE,
-            key_order=HOUSEHOLD_INCOME_RECODE.values(),
-            table_name='annualhouseholdincomeunder18_%s' % geo_level)
+        ['annual household income'], geo_level, geo_code, session,
+        exclude=['Unspecified'],
+        recode=HOUSEHOLD_INCOME_RECODE,
+        key_order=HOUSEHOLD_INCOME_RECODE.values(),
+        table_name='annualhouseholdincomeunder18_%s' % geo_level)
 
     # median income
     median = calculate_median_stat(income_dist_data)
@@ -907,9 +1094,9 @@ def get_child_households_profile(geo_code, geo_level, session):
 
     # type of dwelling
     type_of_dwelling_dist, _ = get_stat_data(
-            ['type of main dwelling'], geo_level, geo_code, session,
-            recode=TYPE_OF_DWELLING_RECODE,
-            order_by='-total')
+        ['type of main dwelling'], geo_level, geo_code, session,
+        recode=TYPE_OF_DWELLING_RECODE,
+        order_by='-total')
     informal = type_of_dwelling_dist['Shack']['numerators']['this']
 
     # size of household
@@ -941,7 +1128,7 @@ def get_child_households_profile(geo_code, geo_level, session):
                 'name': 'Child-headed households with women as their head',
                 'values': {'this': percent(female_heads, total_households)},
                 'numerators': {'this': female_heads},
-                },
+            },
         },
     }
 
