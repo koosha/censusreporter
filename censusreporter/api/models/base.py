@@ -243,7 +243,7 @@ class Country(Base, GeoMixin):
         if not 'ZA' in cls.countries:
             c = cls()
             c.code = 'ZA'
-            c.name = 'South Africa'
+            c.name = 'Canada'
             c.year = '2011'
             cls.countries['ZA'] = c
 

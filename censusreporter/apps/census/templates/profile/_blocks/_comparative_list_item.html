@@ -1,7 +1,7 @@
 {% load humanize madlibs %}
 {# to be called via `comparatives` inclusion tag #}
 <li>
-    {% if index and stat_type != 'count' %}
+    <!-- {% if index and stat_type != 'count' %}
     {{ index|comparison_index_phrase }} the {{ stat_type|stat_type_to_number_noun }} in {{ place_name }}: {% if stat_type == 'dollar' %}R{% endif %}{{ value|floatformat|intcomma|cut:".0" }}{% if stat_type == 'percentage' %}%{% endif %}
     {% if error_ratio >= 10 %}<sup>&dagger;</sup>{% endif %}
     {% else %}
@@ -14,5 +14,5 @@
         {% endif %}
     {% elif error %}
         <span class="context">&plusmn;{% if stat_type == 'dollar' %}R{% endif %}{{ error|floatformat|intcomma|cut:".0" }}{% if stat_type == 'percentage' %}%{% endif %}</span>
-    {% endif %}
+    {% endif %} -->
 </li>
