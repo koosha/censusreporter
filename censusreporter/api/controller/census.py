@@ -568,7 +568,7 @@ def get_demographics_profile(geo_code, geo_level, session):
 
     final_data['citizenship_distribution'] = citizenship_dist
     final_data['citizenship_south_african'] = {
-        'name': 'Canadian citizens citizens',
+        'name': 'Canadian citizens',
         'values': {'this': percent(sa_citizen, citizenship_counter_total)},
         'numerators': {'this': sa_citizen},
     }
@@ -583,6 +583,8 @@ def get_demographics_profile(geo_code, geo_level, session):
     province_of_birth_dist, _ = get_stat_data(
         ['province of birth'], geo_level, geo_code, session,
         exclude_zero=True, order_by='-total')
+
+
 
     # OVERRIDING MIGRATION BAR CHART DATA =================================================
 
@@ -600,7 +602,7 @@ def get_demographics_profile(geo_code, geo_level, session):
         migration_bar_chart_list.append(int(session.execute(sql_command).fetchall()[0][0]))
 
     print(migration_bar_chart_list)
-    migration_bar_chart_counter_total = 0;
+    migration_bar_chart_counter_total = 0
     for counter in migration_bar_chart_list:
         migration_bar_chart_counter_total += counter
 
