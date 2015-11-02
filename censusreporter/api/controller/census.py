@@ -2,6 +2,9 @@ from collections import OrderedDict
 
 from sqlalchemy import func
 
+import json
+import pandas as pd
+
 from api.models import get_model_from_fields
 from api.models.tables import get_datatable, get_table_id
 from api.utils import get_session, LocationNotFound
@@ -10,14 +13,15 @@ from .utils import (collapse_categories, calculate_median, calculate_median_stat
                     merge_dicts, group_remainder, add_metadata, get_stat_data, get_objects_by_geo, percent,
                     create_debug_dump)
 
+
 PROFILE_SECTIONS = (
     'demographics',  # population group, age group in 5 years, age in completed years
-    # 'economics',  # individual monthly income, type of sector, official employment status
-    # 'service_delivery',  # source of water, refuse disposal
-    # 'education',  # highest educational level
-    # 'households',  # household heads, etc.
-    # 'children',  # child-related stats
-    # 'child_households',  # households headed by children
+    #'economics',  # individual monthly income, type of sector, official employment status
+    #'service_delivery',  # source of water, refuse disposal
+    #'education',  # highest educational level
+    #'households',  # household heads, etc.
+    #'children',  # child-related stats
+    #'child_households',  # households headed by children
 )
 
 # Education categories
@@ -299,11 +303,11 @@ def get_census_profile(geo_code, geo_level):
         # group_remainder(data['service_delivery']['water_source_distribution'], 5)
         # group_remainder(data['service_delivery']['refuse_disposal_distribution'], 5)
         # group_remainder(data['service_delivery']['toilet_facilities_distribution'], 5)
-        group_remainder(data['demographics']['language_distribution'], 7)
+        # group_remainder(data['demographics']['language_distribution'], 7)
         group_remainder(data['demographics']['province_of_birth_distribution'], 7)
         group_remainder(data['demographics']['region_of_birth_distribution'], 5)
-        # group_remainder(data['households']['type_of_dwelling_distribution'], 5)
-        # group_remainder(data['child_households']['type_of_dwelling_distribution'], 5)
+        #group_remainder(data['households']['type_of_dwelling_distribution'], 5)
+        #group_remainder(data['child_households']['type_of_dwelling_distribution'], 5)
 
         return data
 
@@ -321,6 +325,39 @@ def get_demographics_profile(geo_code, geo_level, session):
         ['language'], geo_level, geo_code, session, order_by='-total')
     language_most_spoken = language_data[language_data.keys()[0]]
 
+    # OVERRIDING LANGUAGE DATA ================================================
+    language_data.clear()
+
+    # language_data = OrderedDict()
+    spoken_language_db_col = ['english only', 'french', 'arabic', 'cantonese', 'german', 'mandarin',
+                                 'panjabi punjabi', 'spanish', 'tagalog pilipino, filipino', 'ukrainian', 'other', 'no response']
+    spoken_languages = ["English", 'French', 'Arabic', 'Cantonese', 'German', 'Mandarin',
+                         'Panjabi', 'Spanish', 'Filipino', 'Ukrainian', 'other', 'no response']
+    language_list = []
+    for lan in range(0, len(spoken_languages)):
+        col_name = "household languag " + spoken_language_db_col[lan]
+        sql_command = "SELECT SUM(\"" + col_name + "\") FROM yeg_census;"
+        language_list.append(float(session.execute(sql_command).fetchall()[0][0]))
+
+    language_counter_total = 0
+    for lan in language_list:
+        language_counter_total += lan
+
+    language_percentages = []
+    for lan in range(0, len(language_list)):
+        language_percentages.append(round(language_list[lan] * 100 / language_counter_total, 2))
+
+    for lan in range(0, len(language_list)):
+        language_data.update({spoken_languages[lan] : {'name':spoken_languages[lan],
+                'numerators' : {'this' : language_list[lan]},
+                'values' : {'this' : language_percentages[lan]} }})
+
+    language_most_spoken = language_data[spoken_languages[0]]
+
+    language_data.update({'metadata' : {"universe" : "population", "table_id" : "LANGUAGE"}})
+
+    # ==========================================================================
+
     # age groups
     age_dist_data, total_age = get_stat_data(
         ['age groups in 5 years'], geo_level, geo_code, session,
@@ -330,6 +367,51 @@ def get_demographics_profile(geo_code, geo_level, session):
                    '40-49', '50-59',
                    '60-69', '70-79',
                    '80+'))
+
+    key_order=('0-9', '10-19',
+                       '20-29', '30-39',
+                       '40-49', '50-59',
+                       '60-69', '70-79',
+                       '80+')
+
+    # READING AGES FROM TABLE =================================================
+    age_list = []
+    for age in range(0, 85):
+        sql_command_male = "SELECT SUM(\"age_" + str(age) + " male\") FROM yeg_census_age;"
+        sql_command_female = "SELECT SUM(\"age_" + str(age) + " female\") FROM yeg_census_age;"
+        age_list.append(float(session.execute(sql_command_male).fetchall()[0][0]) + float(session.execute(sql_command_female).fetchall()[0][0]))
+
+    sql_command_male = "SELECT SUM(\"age_85+ male\") FROM yeg_census_age;"
+    sql_command_female = "SELECT SUM(\"age_85+ female\") FROM yeg_census_age;"
+    age_list.append(float(session.execute(sql_command_male).fetchall()[0][0]) + float(session.execute(sql_command_female).fetchall()[0][0]))
+
+    age_counter_total = 0
+    for age in age_list:
+        age_counter_total += age
+
+    # OVERRIDING AGE DATA =====================================================
+
+    # For ages between 0-79
+    age_tens_counter = []
+    for tens in range(0, 8):
+        counter = 0
+        for ones in range(0, 11):
+            counter += age_list[10*tens + ones]
+        age_dist_data[key_order[tens]]['numerators']['this'] = counter
+        age_tens_counter.append(counter)
+
+    # # For ages 80+
+    tens = 8;
+    counter = 0
+    for ones in range(0, 6):
+        counter += age_list[10*tens + ones]
+    age_dist_data['80+']['numerators']['this'] = counter
+    age_tens_counter.append(counter)
+
+    for tens in range(0, 9):
+        age_dist_data[key_order[tens]]['values']['this'] = age_tens_counter[tens] * 100 / age_counter_total
+
+    # # ============================================================================
 
     # sex
     db_model_sex = get_model_from_fields(['gender'], geo_level, table_name='gender_%s' % geo_level)
@@ -370,30 +452,63 @@ def get_demographics_profile(geo_code, geo_level, session):
         ['age in completed years'], geo_level,
         table_name='ageincompletedyears_%s' % geo_level
     )
-    objects = sorted(
-        get_objects_by_geo(db_model_age, geo_code, geo_level, session),
-        key=lambda x: int(getattr(x, 'age in completed years'))
-    )
+
+
+    # objects = sorted(
+    #     get_objects_by_geo(db_model_age, geo_code, geo_level, session),
+    #     key=lambda x: int(getattr(x, 'age in completed years'))
+    # )
+
     # median age
-    median = calculate_median(objects, 'age in completed years')
+    # median = calculate_median(objects, 'age in completed years')
+
+    # OVERRIDING AGE MEDIAN  =================================
+    half = age_counter_total / 2
+    counter = 0
+    for age in range(0, 86):
+        counter += age_list[age]
+        if counter > half:
+            median = age
+            break
+
     final_data['median_age'] = {
         "name": "Median age",
         "values": {"this": median},
     }
+    # ========================================================
+
+
     # age category
+    # under_18 = 0.0
+    # over_or_65 = 0.0
+    # between_18_64 = 0.0
+    # total = 0.0
+    # for obj in objects:
+    #     age = int(getattr(obj, 'age in completed years'))
+    #     total += obj.total
+    #     if age < 18:
+    #         under_18 += obj.total
+    #     elif age >= 65:
+    #         over_or_65 += obj.total
+    #     else:
+    #         between_18_64 += obj.total
+
+
+    # OVERRIDING AGE CATEGORY =================================
     under_18 = 0.0
     over_or_65 = 0.0
     between_18_64 = 0.0
     total = 0.0
-    for obj in objects:
-        age = int(getattr(obj, 'age in completed years'))
-        total += obj.total
-        if age < 18:
-            under_18 += obj.total
-        elif age >= 65:
-            over_or_65 += obj.total
-        else:
-            between_18_64 += obj.total
+    for age in range(0, 19):
+        under_18 += age_list[age]
+        total += age_list[age]
+    for age in range(18, 65):
+        between_18_64 += age_list[age]
+        total += age_list[age]
+    for age in range(65, 86):
+        over_or_65 += age_list[age]
+        total += age_list[age]
+    # =========================================================
 
     age_dist = OrderedDict((
         ("under_18", {
@@ -411,6 +526,7 @@ def get_demographics_profile(geo_code, geo_level, session):
 
     add_metadata(age_dist, db_model_age)
 
+
     final_data['age_category_distribution'] = age_dist
 
     # citizenship
@@ -418,19 +534,90 @@ def get_demographics_profile(geo_code, geo_level, session):
         ['citizenship'], geo_level, geo_code, session,
         order_by='-total')
 
-    sa_citizen = citizenship_dist['Yes']['numerators']['this']
+    # sa_citizen = citizenship_dist['Yes']['numerators']['this']
+
+    # OVERRIDING CITIZENSHIP DATA ===========================================
+
+    citizenship_dist.clear()
+
+    possible_citizenships = ['canadian', 'non-canadian', 'no response']
+    citizenship_list = []
+    for citizen in possible_citizenships:
+        col_name = "citizenshi " + citizen
+        sql_command = "SELECT SUM(\"" + col_name + "\") FROM yeg_census;"
+        citizenship_list.append(int(session.execute(sql_command).fetchall()[0][0]))
+
+    citizenship_counter_total = 0
+    for counter in citizenship_list:
+        citizenship_counter_total += counter
+
+    citizenship_percentages = []
+    for citizen in citizenship_list:
+        citizenship_percentages.append(round(citizen * 100 / citizenship_counter_total, 2))
+
+    for index in range(0, len(citizenship_list)):
+        citizenship_dist.update({possible_citizenships[index] : {'name':possible_citizenships[index],
+            'numerators' : {'this' : citizenship_list[index]},
+            'values' : {'this' : citizenship_percentages[index]} }})
+
+    sa_citizen = citizenship_dist['canadian']['numerators']['this']
+
+    citizenship_dist.update({'metadata' : {"universe" : "Population", "table_id" : "CITIZENSHIP"}})
+
+    # =======================================================================
 
     final_data['citizenship_distribution'] = citizenship_dist
     final_data['citizenship_south_african'] = {
-        'name': 'South African citizens',
-        'values': {'this': percent(sa_citizen, total_pop)},
+        'name': 'Canadian citizens citizens',
+        'values': {'this': percent(sa_citizen, citizenship_counter_total)},
         'numerators': {'this': sa_citizen},
     }
+    # final_data['citizenship_south_african'] = {
+    #     'name': 'South African citizens',
+    #     'values': {'this': percent(sa_citizen, total_pop)},
+    #     'numerators': {'this': sa_citizen},
+    # }
+
 
     # migration
     province_of_birth_dist, _ = get_stat_data(
         ['province of birth'], geo_level, geo_code, session,
         exclude_zero=True, order_by='-total')
+
+    # OVERRIDING MIGRATION BAR CHART DATA =================================================
+
+    province_of_birth_dist.clear()
+
+    migration_db_cols = ['elsewhere in edmonton', 'elsewhere in alberta', 'atlantic canada', 'ontario/quebec',
+                         'territories/manitoba/saskatchewan', 'british columbia', 'outside canada', 'no response']
+
+    migration_bar_chart_ui_names = ['elsewhere in edmonton', 'elsewhere in alberta', 'atlantic canada', 'ontario / quebec',
+                         'territories / manitoba / saskatchewan', 'british columbia', 'outside canada', 'no response']
+
+    migration_bar_chart_list = []
+    for area in migration_db_cols:
+        sql_command = "SELECT SUM(\"previous residenc " + str(area) + "\") FROM yeg_census;"
+        migration_bar_chart_list.append(int(session.execute(sql_command).fetchall()[0][0]))
+
+    print(migration_bar_chart_list)
+    migration_bar_chart_counter_total = 0;
+    for counter in migration_bar_chart_list:
+        migration_bar_chart_counter_total += counter
+
+    for index in range(0, len(migration_bar_chart_list)):
+        province_of_birth_dist.update({ migration_bar_chart_ui_names[index] : {
+            'name' : migration_bar_chart_ui_names[index],
+            'numerators' : { 'this' : migration_bar_chart_list[index] },
+            'values' : { 'this' : round(migration_bar_chart_list[index] * 100 / migration_bar_chart_counter_total, 2) }
+            } })
+
+    province_of_birth_dist.update({
+            'metadata' : {
+                'universe' : 'Population',
+                'table_id' : 'PROVINCEOFBIRTH'
+            }})
+
+    # =====================================================================================
 
     final_data['province_of_birth_distribution'] = province_of_birth_dist
 
@@ -445,15 +632,43 @@ def get_demographics_profile(geo_code, geo_level, session):
         exclude_zero=True, order_by='-total',
         recode=region_recode)
 
-    if 'South Africa' in region_of_birth_dist:
-        born_in_sa = region_of_birth_dist['South Africa']['numerators']['this']
-    else:
-        born_in_sa = 0
+    region_of_birth_dist.clear()
+
+    migration_pie_chart_ui_names = ['Alberta', 'Canada / Alberta', 'Outside of Canada']
+    migration_pie_chart_province_areas = ['elsewhere in edmonton', 'elsewhere in alberta']
+    migration_pie_chart_country_areas = ['atlantic canada', 'ontario/quebec', 'territories/manitoba/saskatchewan', 'british columbia', 'outside canada']
+
+
+    migration_pie_chart_list = [0, 0, 0]
+    migration_pie_chart_counter_total = 0
+    for index in range(0, len(migration_db_cols)):
+        migration_pie_chart_counter_total += migration_bar_chart_list[index]
+        if migration_db_cols[index] in migration_pie_chart_province_areas:
+            migration_pie_chart_list[0] += migration_bar_chart_list[index]
+        elif migration_db_cols[index] in migration_pie_chart_country_areas:
+            migration_pie_chart_list[1] += migration_bar_chart_list[index]
+        else:
+            migration_pie_chart_list[2] += migration_bar_chart_list[index]
+
+    for index in range(0, len(migration_pie_chart_list)):
+        region_of_birth_dist.update({ migration_pie_chart_ui_names[index] : {
+            'name' : migration_pie_chart_ui_names[index],
+            'numerators' : {'this' : migration_pie_chart_list[index]},
+            'values' : {'this' : round(migration_pie_chart_list[index] * 100 / migration_pie_chart_counter_total, 2)}
+            }})
+
+    region_of_birth_dist.update({
+        'metadata' : {
+            'universe' : 'Population',
+            'table_id' : 'REGIONOFBIRTH'
+        }})
+
+    born_in_sa = migration_pie_chart_list[0] + migration_pie_chart_list[1]
 
     final_data['region_of_birth_distribution'] = region_of_birth_dist
     final_data['born_in_south_africa'] = {
-        'name': 'Born in South Africa',
-        'values': {'this': percent(born_in_sa, total_pop)},
+        'name': 'Born in Canada',
+        'values': {'this': percent(born_in_sa, migration_pie_chart_counter_total)},
         'numerators': {'this': born_in_sa},
     }
 
@@ -894,11 +1109,11 @@ def get_child_households_profile(geo_code, geo_level, session):
 
     # annual household income
     income_dist_data, _ = get_stat_data(
-        ['annual household income'], geo_level, geo_code, session,
-        exclude=['Unspecified'],
-        recode=HOUSEHOLD_INCOME_RECODE,
-        key_order=HOUSEHOLD_INCOME_RECODE.values(),
-        table_name='annualhouseholdincomeunder18_%s' % geo_level)
+            ['annual household income'], geo_level, geo_code, session,
+            exclude=['Unspecified'],
+            recode=HOUSEHOLD_INCOME_RECODE,
+            key_order=HOUSEHOLD_INCOME_RECODE.values(),
+            table_name='annualhouseholdincomeunder18_%s' % geo_level)
 
     # median income
     median = calculate_median_stat(income_dist_data)
@@ -906,9 +1121,9 @@ def get_child_households_profile(geo_code, geo_level, session):
 
     # type of dwelling
     type_of_dwelling_dist, _ = get_stat_data(
-        ['type of main dwelling'], geo_level, geo_code, session,
-        recode=TYPE_OF_DWELLING_RECODE,
-        order_by='-total')
+            ['type of main dwelling'], geo_level, geo_code, session,
+            recode=TYPE_OF_DWELLING_RECODE,
+            order_by='-total')
     informal = type_of_dwelling_dist['Shack']['numerators']['this']
 
     # size of household
@@ -940,7 +1155,7 @@ def get_child_households_profile(geo_code, geo_level, session):
                 'name': 'Child-headed households with women as their head',
                 'values': {'this': percent(female_heads, total_households)},
                 'numerators': {'this': female_heads},
-            },
+                },
         },
     }
 
