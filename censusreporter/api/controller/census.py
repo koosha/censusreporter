@@ -281,6 +281,7 @@ def get_census_profile(geo_code, geo_level):
 
     try:
         geo_summary_levels = get_summary_geo_info(geo_code, geo_level, session)
+        geo_summary_levels = []
         data = {}
 
         sections = list(PROFILE_SECTIONS)
@@ -398,6 +399,7 @@ def get_demographics_profile(geo_code, geo_level, session):
         for ones in range(0, 11):
             counter += age_list[10*tens + ones]
         age_dist_data[key_order[tens]]['numerators']['this'] = counter
+        age_dist_data[key_order[tens]]['values']['this'] = round(counter * 100 / age_counter_total, 2)
         age_tens_counter.append(counter)
 
     # # For ages 80+
@@ -406,10 +408,11 @@ def get_demographics_profile(geo_code, geo_level, session):
     for ones in range(0, 6):
         counter += age_list[10*tens + ones]
     age_dist_data['80+']['numerators']['this'] = counter
+    age_dist_data['80+']['values']['this'] = round(counter * 100 / age_counter_total, 2)
     age_tens_counter.append(counter)
 
     for tens in range(0, 9):
-        age_dist_data[key_order[tens]]['values']['this'] = age_tens_counter[tens] * 100 / age_counter_total
+        age_dist_data[key_order[tens]]['values']['this'] = round(age_tens_counter[tens] * 100 / age_counter_total, 2)
 
     # # ============================================================================
 
@@ -569,7 +572,7 @@ def get_demographics_profile(geo_code, geo_level, session):
     final_data['citizenship_distribution'] = citizenship_dist
     final_data['citizenship_south_african'] = {
         'name': 'Canadian citizens',
-        'values': {'this': percent(sa_citizen, citizenship_counter_total)},
+        'values': {'this': round(sa_citizen * 100 / citizenship_counter_total, 2)},
         'numerators': {'this': sa_citizen},
     }
     # final_data['citizenship_south_african'] = {
@@ -601,7 +604,6 @@ def get_demographics_profile(geo_code, geo_level, session):
         sql_command = "SELECT SUM(\"previous residenc " + str(area) + "\") FROM yeg_census;"
         migration_bar_chart_list.append(int(session.execute(sql_command).fetchall()[0][0]))
 
-    print(migration_bar_chart_list)
     migration_bar_chart_counter_total = 0
     for counter in migration_bar_chart_list:
         migration_bar_chart_counter_total += counter
@@ -619,6 +621,8 @@ def get_demographics_profile(geo_code, geo_level, session):
                 'table_id' : 'PROVINCEOFBIRTH'
             }})
 
+    citizenship_dist.update({'metadata' : {"universe" : "Population", "table_id" : "PROVINCEOFBIRTH"}})
+
     # =====================================================================================
 
     final_data['province_of_birth_distribution'] = province_of_birth_dist
@@ -633,6 +637,10 @@ def get_demographics_profile(geo_code, geo_level, session):
         ['region of birth'], geo_level, geo_code, session,
         exclude_zero=True, order_by='-total',
         recode=region_recode)
+    if 'South Africa' in region_of_birth_dist:
+        born_in_sa = region_of_birth_dist['South Africa']['numerators']['this']
+    else:
+        born_in_sa = 0
 
     region_of_birth_dist.clear()
 
@@ -670,7 +678,7 @@ def get_demographics_profile(geo_code, geo_level, session):
     final_data['region_of_birth_distribution'] = region_of_birth_dist
     final_data['born_in_south_africa'] = {
         'name': 'Born in Canada',
-        'values': {'this': percent(born_in_sa, migration_pie_chart_counter_total)},
+        'values': {'this': round(born_in_sa * 100 / migration_pie_chart_counter_total, 2)},
         'numerators': {'this': born_in_sa},
     }
 
