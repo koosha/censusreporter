@@ -753,10 +753,12 @@ function Chart(options) {
         var embedHeight = 300,
             embedWidth = (chart.chartType == 'pie') ? 300 : 720,
             embedKey = chart.chartDataKey.substring(chart.chartDataKey.indexOf('-')+1),
+            embedDataYear = chart.initialData.metadata.year,
             embedID = 'cr-embed-'+chart.primaryGeoID+'-'+embedKey,
             embedParams = {
                 geoID: chart.primaryGeoID,
                 chartDataID: embedKey,
+                dataYear: embedDataYear,
                 chartType: chart.chartType,
                 chartHeight: 200,
                 chartQualifier: (chart.chartQualifier || ''),
@@ -769,8 +771,8 @@ function Chart(options) {
         var querystring = $.param(embedParams);
         
         var embedCode = [
-            '<iframe id="'+embedID+'" class="census-reporter-embed" src="http://embed.wazimap.co.za/static/iframe.html?'+querystring+'" frameborder="0" width="100%" height="300" style="margin: 1em; max-width: '+embedWidth+'px;' + embedAlign + '"></iframe>',
-            '\n<script src="http://embed.wazimap.co.za/static/js/embed.chart.make.js"></script>'
+            '<iframe id="'+embedID+'" class="census-reporter-embed" src="' + EMBED_URL + '/static/iframe.html?'+querystring+'" frameborder="0" width="100%" height="300" style="margin: 1em; max-width: '+embedWidth+'px;' + embedAlign + '"></iframe>',
+            '\n<script src="' + EMBED_URL + '/static/js/embed.chart.make.js"></script>'
         ].join('');
         
         textarea.html(embedCode);
@@ -1054,11 +1056,11 @@ function Chart(options) {
     chart.cardToggle = function(data) {
         var cardData = (chart.chartType == 'pie') ? data.data : data;
         if (!!chart.hovercard) {
-            if (chart.hovercard.style("opacity") == 1 && comparison.clicked == d) {
+            if (chart.hovercard.style("opacity") == 1 && chart.clicked == d) {
                 chart.mouseout();
             } else {
                 chart.mouseover(cardData);
-                comparison.clicked = d;
+                chart.clicked = d;
             }
         }
     }

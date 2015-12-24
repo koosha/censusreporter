@@ -34,7 +34,8 @@ def render_json_error(message, status_code=400):
 class GeographyDetailView(BaseGeographyDetailView):
     def dispatch(self, *args, **kwargs):
         self.geo_id = self.kwargs.get('geography_id', None)
-        return super(GeographyDetailView, self).dispatch(*args, **kwargs)
+        # Skip the parent class's logic completely and go back to basics
+        return TemplateView.dispatch(self, *args, **kwargs)
 
 
     def get_context_data(self, *args, **kwargs):
@@ -57,30 +58,19 @@ class GeographyDetailView(BaseGeographyDetailView):
         page_context.update(profile_data)
 
         profile_data_json = SafeString(simplejson.dumps(profile_data, cls=LazyEncoder))
-        self.write_profile_json(profile_data_json)
 
         page_context.update({
             'profile_data_json': profile_data_json
         })
+
+        # is this a head-to-head view?
+        page_context['head2head'] = 'h2h' in self.request.GET
 
         return page_context
 
     def get_geography(self, geo_id):
         # stub this out to prevent the subclass for calling out to CR
         pass
-
-    def write_profile_json(self, data):
-        # unversioned, un-zipped embed data
-        key = settings.EMBED_DIR + '/profiles/%s.json' % self.geo_id
-        logger.debug(key)
-        if not os.path.isfile(key):
-            try:
-                # create file object
-                with open(key, 'w+') as f:
-                    f.write(data)
-            except Exception as e:
-                logger.error('Cannot write json data file to disk.', exc_info=e)
-                pass
 
 
 class GeographyJsonView(GeographyDetailView):
@@ -260,3 +250,24 @@ class TableAPIView(View):
 
 class AboutView(TemplateView):
     template_name = 'about.html'
+
+
+class GeographyCompareView(TemplateView):
+    template_name = 'profile/head2head.html'
+
+    def get_context_data(self, geo_id1, geo_id2):
+        page_context = {
+            'geo_id1': geo_id1,
+            'geo_id2': geo_id2,
+        }
+
+        try:
+            level, code = geo_id1.split('-', 1)
+            page_context['geo1'] = get_geography(code, level)
+
+            level, code = geo_id2.split('-', 1)
+            page_context['geo2'] = get_geography(code, level)
+        except (ValueError, LocationNotFound):
+            raise Http404
+
+        return page_context

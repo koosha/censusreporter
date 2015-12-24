@@ -25,7 +25,7 @@
             m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
             })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-            ga('create', 'UA-48399585-5', 'wazimap.co.za');
+            ga('create', 'UA-48399585-5', 'auto');
             ga('send', 'pageview');
 
         </script>
@@ -52,27 +52,29 @@
                     <img src="{% static 'img/wazi-logo.png' %}"> Wazimap
                 </a>
                 {% if not hide_nav_tools %}
-                <div id="menu" class="tool-set clearfix">
-                    <div class="tool-group">
-                        <input name="geography_select" id="geography-select" type="text" placeholder="Start typing a place name or address..." autocomplete="off">
+                    {% block nav_tools %}
+                    <div id="menu" class="tool-set clearfix">
+                        <div class="tool-group">
+                            <input name="geography_select" id="geography-select" type="text" placeholder="Start typing a place name or address..." autocomplete="off">
+                        </div>
+                        {% if not hide_nav_compare %}
+                        {% comment %}
+                        <span class="separator">or</span>
+                        <div class="tool-group">
+                            <a class="button" href="{% url 'table_search' %}">
+                                <i class="fa fa-chevron-circle-right"></i>
+                                Search for data
+                            </a>
+                        </div>
+                        {% endcomment %}
+                        {% endif %}
                     </div>
-                    {% if not hide_nav_compare %}
-                    {% comment %}
-                    <span class="separator">or</span>
-                    <div class="tool-group">
-                        <a class="button" href="{% url 'table_search' %}">
-                            <i class="fa fa-chevron-circle-right"></i>
-                            Search for data
-                        </a>
-                    </div>
-                    {% endcomment %}
-                    {% endif %}
-                </div>
+                    {% endblock %}
                 {% endif %}
                 <div class="header-buttons">
                     <a class="wide-only" href="https://twitter.com/@Wazimap" title="@Wazimap on Twitter"><i class="fa fa-2x fa-twitter"></i></a>
-                    <a class="wide-only logo" href="http://www.mediamonitoringafrica.org/" target="_blank">
-                        <img src="{% static 'img/mma.png' %}">
+                    <a href="http://www.mediamonitoringafrica.org/" target="_blank">
+                        <img class="mma-logo" src="{% static 'img/mma.png' %}">
                     </a>
                 </div>
             </div>
@@ -134,6 +136,9 @@
                 <div class="column-quarter">
                     <ul class="ul-icon-list">
                         <li>
+                            <a href="http://www.mediamonitoringafrica.org/"><img class="mma-logo" src="{% static 'img/mma.png' %}"></a>
+                        </li>
+                        <li>
                             <a href="http://www.code4sa.org/"><img src="{% static 'img/code4sa-logo-small.png' %}"></a>
                         </li>
                     </ul>
@@ -161,6 +166,7 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-ajaxtransport-xdomainrequest/1.0.1/jquery.xdomainrequest.min.js"></script>
         <![endif]-->
         
+        <script src="{% static 'js/settings.js' %}"></script>
         <script src="{% static 'js/app.js' %}"></script>
         <script src="{% static 'js/glossary.js' %}"></script>
         <script src="{% static 'js/widget.geo.select.js' %}"></script>

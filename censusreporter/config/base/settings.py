@@ -35,6 +35,7 @@ LANGUAGE_CODE = 'en-za'
 SITE_ID = 1
 USE_I18N = False
 USE_L10N = True
+USE_THOUSAND_SEPARATOR = True
 FORMAT_MODULE_PATH = 'formats'
 USE_TZ = True
 SECRET_KEY = '!%j-u4&(q8qu4@dq=ukth27+q!v-!h^jck14bf=spqht847$4q'
@@ -61,6 +62,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.core.context_processors.static',
     'django.contrib.auth.context_processors.auth',
+    'census.context_processors.api_url',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -115,4 +117,3 @@ ADMINS = (
 MANAGERS = ADMINS
 
 API_URL = 'http://api.censusreporter.org'
-EMBED_DIR = PROJECT_ROOT + '/embed_data'
